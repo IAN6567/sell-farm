@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - FarmConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>FarmConnect</h1>
+                <p>Fresh from Kenyan Farms</p>
+            </div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="products.html">Products</a></li>
+                    <li><a href="dashboard.html">Farmer Dashboard</a></li>
+                    <li><a href="admin.html">Admin</a></li>
+                    <li><a href="#" id="cart-link">Cart (<span id="cart-count">0</span>)</a></li>
+                    <li><a href="#" id="login-link">Login</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <h1>Checkout</h1>
+            
+            <div class="checkout-container">
+                <div class="checkout-summary">
+                    <h3>Order Summary</h3>
+                    <div id="checkout-items">
+                        <!-- Cart items will be loaded here -->
+                    </div>
+                    <div class="checkout-total">
+                        <p>Total: KSh <span id="checkout-total-amount">0</span></p>
+                    </div>
+                </div>
+
+                <div class="checkout-form">
+                    <h3>Shipping Information</h3>
+                    <form id="checkout-form">
+                        <div class="form-group">
+                            <label for="full-name">Full Name</label>
+                            <input type="text" id="full-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="county">County</label>
+                            <input type="text" id="county" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="town">Town</label>
+                            <input type="text" id="town" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <textarea id="address" rows="3" required></textarea>
+                        </div>
+                        
+                        <h3>Payment Method</h3>
+                        <div class="payment-methods">
+                            <div class="payment-option">
+                                <input type="radio" id="mpesa" name="payment" value="mpesa" checked>
+                                <label for="mpesa">M-Pesa</label>
+                            </div>
+                            <div class="payment-option">
+                                <input type="radio" id="cash" name="payment" value="cash">
+                                <label for="cash">Cash on Delivery</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-large">Place Order</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>FarmConnect</h3>
+                    <p>Connecting rural Kenyan farmers with buyers nationwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="products.html">Products</a></li>
+                        <li><a href="dashboard.html">Farmer Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@farmconnect.co.ke</p>
+                    <p>Phone: +254 700 123 456</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 FarmConnect. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Order Success Modal -->
+    <div id="order-success-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Order Placed Successfully!</h2>
+            <p>Thank you for your order. Your order ID is: <strong id="order-id">FC-12345</strong></p>
+            <p>You will receive a confirmation message shortly.</p>
+            <a href="index.html" class="btn btn-primary">Continue Shopping</a>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/checkout.js"></script>
+</body>
+</html>

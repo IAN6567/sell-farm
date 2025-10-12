@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - FarmConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>FarmConnect</h1>
+                <p>Fresh from Kenyan Farms</p>
+            </div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="products.html">Products</a></li>
+                    <li><a href="dashboard.html">Farmer Dashboard</a></li>
+                    <li><a href="admin.html" class="active">Admin</a></li>
+                    <li><a href="#" id="cart-link">Cart (<span id="cart-count">0</span>)</a></li>
+                    <li><a href="#" id="login-link">Login</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-header">
+        <div class="container">
+            <h2>Admin Panel</h2>
+            <nav class="dashboard-nav">
+                <ul>
+                    <li><a href="#admin-overview" class="admin-tab active" data-tab="overview">Overview</a></li>
+                    <li><a href="#pending-products" class="admin-tab" data-tab="pending-products">Pending Products</a></li>
+                    <li><a href="#all-products" class="admin-tab" data-tab="all-products">All Products</a></li>
+                    <li><a href="#users" class="admin-tab" data-tab="users">Users</a></li>
+                    <li><a href="#orders" class="admin-tab" data-tab="orders">Orders</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Overview Section -->
+            <section id="admin-overview" class="admin-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-total-users">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-total-farmers">0</div>
+                        <div class="stat-label">Total Farmers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-total-products">0</div>
+                        <div class="stat-label">Total Products</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-pending-products">0</div>
+                        <div class="stat-label">Pending Products</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-total-orders">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">KSh <span id="admin-total-revenue">0</span></div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pending Products Section -->
+            <section id="pending-products" class="admin-section">
+                <div class="dashboard-content">
+                    <h3>Pending Product Approvals</h3>
+                    <div class="table-responsive">
+                        <table class="table" id="pending-products-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Farmer</th>
+                                    <th>Date Added</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pending-products-body">
+                                <!-- Pending products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- All Products Section -->
+            <section id="all-products" class="admin-section">
+                <div class="dashboard-content">
+                    <h3>All Products</h3>
+                    <div class="admin-controls">
+                        <div class="filter-options">
+                            <select id="product-status-filter">
+                                <option value="">All Status</option>
+                                <option value="approved">Approved</option>
+                                <option value="pending">Pending</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <select id="product-category-filter">
+                                <option value="">All Categories</option>
+                                <option value="livestock">Livestock</option>
+                                <option value="poultry">Poultry</option>
+                                <option value="vegetables">Vegetables</option>
+                                <option value="fruits">Fruits</option>
+                                <option value="dairy">Dairy</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="all-products-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Farmer</th>
+                                    <th>Status</th>
+                                    <th>Date Added</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-products-body">
+                                <!-- All products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="users" class="admin-section">
+                <div class="dashboard-content">
+                    <h3>User Management</h3>
+                    <div class="table-responsive">
+                        <table class="table" id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>User Type</th>
+                                    <th>Location</th>
+                                    <th>Join Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders" class="admin-section">
+                <div class="dashboard-content">
+                    <h3>Order Management</h3>
+                    <div class="table-responsive">
+                        <table class="table" id="admin-orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-orders-body">
+                                <!-- Orders will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>FarmConnect</h3>
+                    <p>Connecting rural Kenyan farmers with buyers nationwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="products.html">Products</a></li>
+                        <li><a href="dashboard.html">Farmer Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@farmconnect.co.ke</p>
+                    <p>Phone: +254 700 123 456</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 FarmConnect. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <!-- Same login modal content as index.html -->
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-sidebar" class="sidebar">
+        <!-- Same cart sidebar content as index.html -->
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

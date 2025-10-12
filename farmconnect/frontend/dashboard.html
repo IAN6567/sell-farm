@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Dashboard - FarmConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>FarmConnect</h1>
+                <p>Fresh from Kenyan Farms</p>
+            </div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="products.html">Products</a></li>
+                    <li><a href="dashboard.html" class="active">Farmer Dashboard</a></li>
+                    <li><a href="admin.html">Admin</a></li>
+                    <li><a href="#" id="cart-link">Cart (<span id="cart-count">0</span>)</a></li>
+                    <li><a href="#" id="login-link">My Account</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-header">
+        <div class="container">
+            <h2>Farmer Dashboard</h2>
+            <nav class="dashboard-nav">
+                <ul>
+                    <li><a href="#overview" class="dashboard-tab active" data-tab="overview">Overview</a></li>
+                    <li><a href="#products" class="dashboard-tab" data-tab="products">My Products</a></li>
+                    <li><a href="#add-product" class="dashboard-tab" data-tab="add-product">Add Product</a></li>
+                    <li><a href="#orders" class="dashboard-tab" data-tab="orders">Orders</a></li>
+                    <li><a href="#profile" class="dashboard-tab" data-tab="profile">Profile</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Overview Section -->
+            <section id="overview" class="dashboard-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-products">0</div>
+                        <div class="stat-label">Total Products</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="pending-orders">0</div>
+                        <div class="stat-label">Pending Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">KSh <span id="total-sales">0</span></div>
+                        <div class="stat-label">Total Sales</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="approved-products">0</div>
+                        <div class="stat-label">Approved Products</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-content">
+                    <h3>Recent Activity</h3>
+                    <div id="recent-activity">
+                        <p>No recent activity</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- My Products Section -->
+            <section id="products" class="dashboard-section">
+                <div class="dashboard-content">
+                    <h3>My Products</h3>
+                    <div class="table-responsive">
+                        <table class="table" id="products-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body">
+                                <!-- Products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add Product Section -->
+            <section id="add-product" class="dashboard-section">
+                <div class="dashboard-content">
+                    <h3>Add New Product</h3>
+                    <form id="add-product-form">
+                        <div class="form-group">
+                            <label for="product-name">Product Name</label>
+                            <input type="text" id="product-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-category">Category</label>
+                            <select id="product-category" required>
+                                <option value="">Select Category</option>
+                                <option value="livestock">Livestock</option>
+                                <option value="poultry">Poultry</option>
+                                <option value="vegetables">Vegetables</option>
+                                <option value="fruits">Fruits</option>
+                                <option value="dairy">Dairy</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-price">Price (KSh)</label>
+                            <input type="number" id="product-price" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-quantity">Quantity</label>
+                            <input type="number" id="product-quantity" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-unit">Unit</label>
+                            <select id="product-unit" required>
+                                <option value="piece">Piece</option>
+                                <option value="kg">Kilogram</option>
+                                <option value="litre">Litre</option>
+                                <option value="dozen">Dozen</option>
+                                <option value="bunch">Bunch</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-description">Description</label>
+                            <textarea id="product-description" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-image">Product Image</label>
+                            <input type="file" id="product-image" accept="image/*">
+                            <small>Note: In a real application, this would upload to a server</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders" class="dashboard-section">
+                <div class="dashboard-content">
+                    <h3>Orders</h3>
+                    <div class="table-responsive">
+                        <table class="table" id="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body">
+                                <!-- Orders will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile" class="dashboard-section">
+                <div class="dashboard-content">
+                    <h3>Farmer Profile</h3>
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label for="farm-name">Farm Name</label>
+                            <input type="text" id="farm-name" value="Mwangi Farm">
+                        </div>
+                        <div class="form-group">
+                            <label for="farmer-name">Farmer Name</label>
+                            <input type="text" id="farmer-name" value="John Mwangi">
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" value="Nakuru, Kenya">
+                        </div>
+                        <div class="form-group">
+                            <label for="contact">Contact Number</label>
+                            <input type="tel" id="contact" value="+254 712 345 678">
+                        </div>
+                        <div class="form-group">
+                            <label for="farm-description">Farm Description</label>
+                            <textarea id="farm-description" rows="4">We specialize in organic vegetables and free-range poultry.</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>FarmConnect</h3>
+                    <p>Connecting rural Kenyan farmers with buyers nationwide.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="products.html">Products</a></li>
+                        <li><a href="dashboard.html">Farmer Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@farmconnect.co.ke</p>
+                    <p>Phone: +254 700 123 456</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 FarmConnect. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <!-- Same login modal content as index.html -->
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-sidebar" class="sidebar">
+        <!-- Same cart sidebar content as index.html -->
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
