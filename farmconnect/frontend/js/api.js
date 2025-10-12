@@ -1,10 +1,12 @@
 // js/api.js - COMPLETELY FIXED
 const API_BASE_URL = 'http://localhost:5000/api';
 
-// Generic API call function
+// Generic API call function with comprehensive error handling
 async function apiCall(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    console.log(`🔄 API Call: ${url}`, options.method || 'GET');
+
     const config = {
         headers: {
             'Content-Type': 'application/json',
@@ -12,30 +14,34 @@ async function apiCall(endpoint, options = {}) {
         },
         ...options
     };
-    
+
     // Add auth token if available
     const token = localStorage.getItem('authToken');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // For FormData, let browser set content-type
-    if (options.body instanceof FormData) {
-        delete config.headers['Content-Type'];
-    }
-    
+
     try {
         const response = await fetch(url, config);
         
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            let errorMessage = `HTTP error! status: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+                // If response is not JSON, use status text
+                errorMessage = response.statusText || errorMessage;
+            }
+            throw new Error(errorMessage);
         }
-        
-        return await response.json();
+
+        const data = await response.json();
+        console.log(`✅ API Success: ${url}`);
+        return data;
         
     } catch (error) {
-        console.error('API call failed:', error);
+        console.error(`❌ API Error: ${url}`, error);
         
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
             throw new Error('Cannot connect to server. Please make sure the backend is running on http://localhost:5000');
@@ -105,6 +111,10 @@ const productsAPI = {
     
     async getMyProducts() {
         return await apiCall('/products/my-products');
+    },
+    
+    async getProduct(id) {
+        return await apiCall(`/products/${id}`);
     }
 };
 
@@ -154,6 +164,10 @@ function getUserData() {
     return userData ? JSON.parse(userData) : null;
 }
 
+function getAuthToken() {
+    return localStorage.getItem('authToken');
+}
+
 // Make functions available globally
 window.authAPI = authAPI;
 window.productsAPI = productsAPI;
@@ -162,3 +176,21 @@ window.adminAPI = adminAPI;
 window.isLoggedIn = isLoggedIn;
 window.getUserType = getUserType;
 window.getUserData = getUserData;
+window.getAuthToken = getAuthToken;
+
+// Test connection on load
+async function testConnection() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/test`);
+        if (response.ok) {
+            console.log('✅ Backend connection successful');
+        } else {
+            console.warn('⚠️ Backend connection issue');
+        }
+    } catch (error) {
+        console.error('❌ Backend connection failed:', error);
+    }
+}
+
+// Test connection when API loads
+testConnection();

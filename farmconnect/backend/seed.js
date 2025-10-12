@@ -61,7 +61,7 @@ async function seedDatabase() {
             location: { county: 'Nairobi', town: 'Westlands' }
         });
 
-        // Create sample products
+        // Create sample products with CORRECT image paths
         const products = [
             {
                 name: 'Fresh Tomatoes',
@@ -73,7 +73,7 @@ async function seedDatabase() {
                 unit: 'kg',
                 status: 'approved',
                 location: farmer1.location,
-                images: ['https://via.placeholder.com/300x200?text=Tomatoes']
+                images: ['/images/vegetables.jpg'] // Fixed path
             },
             {
                 name: 'Organic Chicken',
@@ -85,7 +85,7 @@ async function seedDatabase() {
                 unit: 'piece',
                 status: 'approved',
                 location: farmer2.location,
-                images: ['https://via.placeholder.com/300x200?text=Chicken']
+                images: ['/images/poultry.jpg'] // Fixed path
             },
             {
                 name: 'Fresh Milk',
@@ -97,7 +97,7 @@ async function seedDatabase() {
                 unit: 'litre',
                 status: 'approved',
                 location: farmer1.location,
-                images: ['https://via.placeholder.com/300x200?text=Milk']
+                images: ['/images/dairy.jpg'] // Fixed path
             },
             {
                 name: 'Sukuma Wiki',
@@ -109,7 +109,7 @@ async function seedDatabase() {
                 unit: 'bunch',
                 status: 'approved',
                 location: farmer2.location,
-                images: ['https://via.placeholder.com/300x200?text=Kale']
+                images: ['/images/vegetables.jpg'] // Fixed path
             },
             {
                 name: 'Goat Meat',
@@ -121,7 +121,7 @@ async function seedDatabase() {
                 unit: 'kg',
                 status: 'pending',
                 location: farmer1.location,
-                images: ['https://via.placeholder.com/300x200?text=Goat+Meat']
+                images: ['/images/livestock.jpg'] // Fixed path
             },
             {
                 name: 'Avocados',
@@ -133,7 +133,7 @@ async function seedDatabase() {
                 unit: 'piece',
                 status: 'approved',
                 location: farmer2.location,
-                images: ['https://via.placeholder.com/300x200?text=Avocados']
+                images: ['/images/fruits.jpg'] // Fixed path
             }
         ];
 
@@ -144,7 +144,7 @@ async function seedDatabase() {
         console.log('👨‍🌾 Farmer 1: john@farmconnect.com / farmer123');
         console.log('👩‍🌾 Farmer 2: jane@farmconnect.com / farmer123');
         console.log('👤 Buyer: david@farmconnect.com / buyer123');
-        console.log('🥦 6 sample products (1 pending approval)');
+        console.log('🥦 6 sample products with proper image paths');
         console.log('✅ Database seeded successfully!');
 
         mongoose.connection.close();

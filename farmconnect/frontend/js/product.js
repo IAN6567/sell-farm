@@ -1,152 +1,178 @@
-// js/products.js
-// Products page functionality
-
-document.addEventListener('DOMContentLoaded', function() {
-    initProductsPage();
+// js/products.js - COMPLETE & RESPONSIVE WITH IMAGE FALLBACKS
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("🛍️ Products Page Initializing...");
+  initProductsPage();
 });
-
-function initProductsPage() {
-    loadProducts();
-    setupSearchAndFilter();
-}
 
 let currentPage = 1;
 const productsPerPage = 12;
 let allProducts = [];
+let filteredProducts = [];
 
-function loadProducts() {
-    const productsGrid = document.getElementById('products-grid');
-    
-    if (!productsGrid) return;
-    
-    // Mock data - in real app, fetch from API
-    allProducts = [
-        { id: 1, name: 'Fresh Tomatoes', price: 150, image: 'images/tomatoes.jpg', farmer: 'Mwangi Farm', category: 'vegetables' },
-        { id: 2, name: 'Organic Chicken', price: 800, image: 'images/chicken.jpg', farmer: 'Njeri Poultry', category: 'poultry' },
-        { id: 3, name: 'Fresh Milk', price: 80, image: 'images/milk.jpg', farmer: 'Kariuki Dairy', category: 'dairy' },
-        { id: 4, name: 'Sukuma Wiki', price: 50, image: 'images/sukuma.jpg', farmer: 'Omondi Farm', category: 'vegetables' },
-        { id: 5, name: 'Goat Meat', price: 1200, image: 'https://via.placeholder.com/300x200?text=Goat+Meat', farmer: 'Kamau Farm', category: 'livestock' },
-        { id: 6, name: 'Avocados', price: 30, image: 'https://via.placeholder.com/300x200?text=Avocados', farmer: 'Muthoni Farm', category: 'fruits' },
-        { id: 7, name: 'Eggs', price: 300, image: 'https://via.placeholder.com/300x200?text=Eggs', farmer: 'Njeri Poultry', category: 'poultry' },
-        { id: 8, name: 'Potatoes', price: 100, image: 'https://via.placeholder.com/300x200?text=Potatoes', farmer: 'Omondi Farm', category: 'vegetables' },
-        { id: 9, name: 'Bananas', price: 40, image: 'https://via.placeholder.com/300x200?text=Bananas', farmer: 'Muthoni Farm', category: 'fruits' },
-        { id: 10, name: 'Sheep', price: 8000, image: 'https://via.placeholder.com/300x200?text=Sheep', farmer: 'Omondi Ranch', category: 'livestock' },
-        { id: 11, name: 'Yogurt', price: 120, image: 'https://via.placeholder.com/300x200?text=Yogurt', farmer: 'Kariuki Dairy', category: 'dairy' },
-        { id: 12, name: 'Kale', price: 40, image: 'https://via.placeholder.com/300x200?text=Kale', farmer: 'Mwangi Farm', category: 'vegetables' }
-    ];
-    
-    displayProducts(allProducts);
-    setupPagination(allProducts.length);
+async function initProductsPage() {
+  try {
+    await loadProducts();
+    setupSearchAndFilter();
+    console.log("✅ Products Page Ready");
+  } catch (error) {
+    console.error("❌ Products page initialization failed:", error);
+    showProductsMessage(
+      "Error loading products. Please refresh the page.",
+      "error"
+    );
+  }
+}
+
+async function loadProducts() {
+  const productsGrid = document.getElementById("products-grid");
+
+  if (!productsGrid) return;
+
+  try {
+    console.log("🔄 Loading all products...");
+    productsGrid.innerHTML = '<div class="loading">Loading products...</div>';
+
+    const response = await productsAPI.getProducts();
+    allProducts = response.products || [];
+    filteredProducts = [...allProducts];
+
+    if (allProducts.length === 0) {
+      productsGrid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-icon">📦</div>
+                    <h3>No Products Available</h3>
+                    <p>Check back later for new farm products.</p>
+                </div>
+            `;
+      return;
+    }
+
+    console.log(`✅ Loaded ${allProducts.length} products`);
+
+    displayProducts(filteredProducts);
+    setupPagination(filteredProducts.length);
+  } catch (error) {
+    console.error("Error loading products:", error);
+    productsGrid.innerHTML = `
+            <div class="message error" style="grid-column: 1 / -1;">
+                Error loading products. Please try again later.
+            </div>
+        `;
+  }
 }
 
 function displayProducts(products) {
-    const productsGrid = document.getElementById('products-grid');
-    
-    if (!productsGrid) return;
-    
-    productsGrid.innerHTML = '';
-    
-    const startIndex = (currentPage - 1) * productsPerPage;
-    const endIndex = startIndex + productsPerPage;
-    const productsToShow = products.slice(startIndex, endIndex);
-    
-    if (productsToShow.length === 0) {
-        productsGrid.innerHTML = '<p class="loading">No products found matching your criteria.</p>';
-        return;
-    }
-    
-    productsToShow.forEach(product => {
-        const productCard = createProductCard(product);
-        productsGrid.appendChild(productCard);
-    });
+  const productsGrid = document.getElementById("products-grid");
+
+  if (!productsGrid) return;
+
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const productsToShow = products.slice(startIndex, endIndex);
+
+  if (productsToShow.length === 0) {
+    productsGrid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-icon">🔍</div>
+                <h3>No Products Found</h3>
+                <p>Try adjusting your search or filter criteria.</p>
+                <button onclick="clearFilters()" class="btn btn-primary">
+                    Clear Filters
+                </button>
+            </div>
+        `;
+    return;
+  }
+
+  productsGrid.innerHTML = "";
+
+  productsToShow.forEach((product) => {
+    const productCard = createProductCard(product);
+    productsGrid.appendChild(productCard);
+  });
 }
 
-function setupSearchAndFilter() {
-    const searchInput = document.getElementById('search-input');
-    const searchBtn = document.getElementById('search-btn');
-    const categoryFilter = document.getElementById('category-filter');
-    
-    if (searchBtn) {
-        searchBtn.addEventListener('click', filterProducts);
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('keyup', function(e) {
-            if (e.key === 'Enter') {
-                filterProducts();
+function createProductCard(product) {
+  const card = document.createElement("div");
+  card.className = "product-card";
+
+  // Try to use product image, fallback to placeholder
+  const imageUrl =
+    product.images && product.images.length > 0 ? product.images[0] : null;
+
+  const farmerName =
+    product.farmer?.farmName || product.farmer?.name || "Unknown Farmer";
+  const location = product.farmer?.location
+    ? `${product.farmer.location.county}, ${product.farmer.location.town}`
+    : "Location not specified";
+
+  card.innerHTML = `
+        <div class="product-image-container">
+            ${
+              imageUrl
+                ? `
+                <img src="${imageUrl}" alt="${product.name}" class="product-image" 
+                     onerror="this.classList.add('fallback'); this.nextElementSibling.style.display='flex'">
+            `
+                : ""
             }
-        });
-    }
-    
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', filterProducts);
-    }
+            <div class="product-image-placeholder" data-category="${
+              product.category
+            }" 
+                 style="${imageUrl ? "display: none;" : "display: flex;"}">
+                <div class="product-emoji">${getCategoryEmoji(
+                  product.category
+                )}</div>
+                <div class="product-category">${product.category}</div>
+            </div>
+        </div>
+        <div class="product-info">
+            <h3 class="product-title">${product.name}</h3>
+            <p class="product-price">KSh ${product.price?.toLocaleString()}</p>
+            <p class="product-farmer">
+                <strong>By:</strong> ${farmerName}
+            </p>
+            <p class="product-location">
+                <small>📍 ${location}</small>
+            </p>
+            ${
+              product.description
+                ? `<p class="product-description">${product.description.substring(
+                    0,
+                    80
+                  )}...</p>`
+                : ""
+            }
+            <button class="btn btn-primary add-to-cart" data-id="${
+              product._id
+            }">
+                Add to Cart
+            </button>
+        </div>
+    `;
+
+  const addToCartBtn = card.querySelector(".add-to-cart");
+  addToCartBtn.addEventListener("click", function () {
+    addToCart({
+      id: product._id,
+      name: product.name,
+      price: product.price,
+      image: getCategoryEmoji(product.category),
+      farmer: farmerName,
+    });
+  });
+
+  return card;
 }
 
-function filterProducts() {
-    const searchTerm = document.getElementById('search-input').value.toLowerCase();
-    const category = document.getElementById('category-filter').value;
-    
-    let filteredProducts = allProducts;
-    
-    // Filter by search term
-    if (searchTerm) {
-        filteredProducts = filteredProducts.filter(product => 
-            product.name.toLowerCase().includes(searchTerm) ||
-            product.farmer.toLowerCase().includes(searchTerm)
-        );
-    }
-    
-    // Filter by category
-    if (category) {
-        filteredProducts = filteredProducts.filter(product => product.category === category);
-    }
-    
-    currentPage = 1;
-    displayProducts(filteredProducts);
-    setupPagination(filteredProducts.length);
+function getCategoryEmoji(category) {
+  const emojis = {
+    livestock: "🐄",
+    poultry: "🐔",
+    vegetables: "🥦",
+    fruits: "🍎",
+    dairy: "🥛",
+    other: "📦",
+  };
+  return emojis[category] || "📦";
 }
-
-function setupPagination(totalProducts) {
-    const pagination = document.getElementById('pagination');
-    
-    if (!pagination) return;
-    
-    const totalPages = Math.ceil(totalProducts / productsPerPage);
-    
-    if (totalPages <= 1) {
-        pagination.innerHTML = '';
-        return;
-    }
-    
-    let paginationHTML = '';
-    
-    // Previous button
-    if (currentPage > 1) {
-        paginationHTML += `<button onclick="changePage(${currentPage - 1})">Previous</button>`;
-    }
-    
-    // Page numbers
-    for (let i = 1; i <= totalPages; i++) {
-        if (i === currentPage) {
-            paginationHTML += `<button class="active">${i}</button>`;
-        } else {
-            paginationHTML += `<button onclick="changePage(${i})">${i}</button>`;
-        }
-    }
-    
-    // Next button
-    if (currentPage < totalPages) {
-        paginationHTML += `<button onclick="changePage(${currentPage + 1})">Next</button>`;
-    }
-    
-    pagination.innerHTML = paginationHTML;
-}
-
-function changePage(page) {
-    currentPage = page;
-    filterProducts(); // This will re-display products with the new page
-}
-
-// Make function available globally
-window.changePage = changePage;

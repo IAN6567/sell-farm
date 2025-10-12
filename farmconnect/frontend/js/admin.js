@@ -1,13 +1,32 @@
-// js/admin.js
-// Admin panel functionality
-
+// js/admin.js - COMPLETE & RESPONSIVE
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('👑 Admin Panel Initializing...');
+    
+    // Check if user is authenticated and is an admin
+    if (!isLoggedIn()) {
+        alert('Please login to access the admin panel.');
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    if (getUserType() !== 'admin') {
+        alert('Access denied. Admin privileges required.');
+        window.location.href = 'index.html';
+        return;
+    }
+    
     initAdminPanel();
 });
 
-function initAdminPanel() {
-    setupAdminTabs();
-    loadAdminData();
+async function initAdminPanel() {
+    try {
+        setupAdminTabs();
+        await loadAdminData();
+        console.log('✅ Admin Panel Ready');
+    } catch (error) {
+        console.error('❌ Admin panel initialization failed:', error);
+        showAdminMessage('Error loading admin panel. Please refresh the page.', 'error');
+    }
 }
 
 function setupAdminTabs() {
@@ -48,221 +67,560 @@ function setupAdminTabs() {
                         loadAdminStats();
                         break;
                 }
+                
+                console.log(`📁 Switched to admin tab: ${tabId}`);
             }
         });
     });
 }
 
-function loadAdminData() {
-    loadAdminStats();
-    loadPendingProducts();
+async function loadAdminData() {
+    try {
+        await Promise.all([
+            loadAdminStats(),
+            loadPendingProducts()
+        ]);
+    } catch (error) {
+        console.error('Error loading admin data:', error);
+        showAdminMessage('Error loading admin data', 'error');
+    }
 }
 
-function loadAdminStats() {
-    // Mock data - in real app, fetch from API
-    document.getElementById('admin-total-users').textContent = '156';
-    document.getElementById('admin-total-farmers').textContent = '42';
-    document.getElementById('admin-total-products').textContent = '287';
-    document.getElementById('admin-pending-products').textContent = '15';
-    document.getElementById('admin-total-orders').textContent = '89';
-    document.getElementById('admin-total-revenue').textContent = '256,800';
+async function loadAdminStats() {
+    try {
+        console.log('📊 Loading admin stats...');
+        const stats = await adminAPI.getStats();
+        
+        document.getElementById('admin-total-users').textContent = stats.totalUsers || 0;
+        document.getElementById('admin-total-farmers').textContent = stats.totalFarmers || 0;
+        document.getElementById('admin-total-products').textContent = stats.totalProducts || 0;
+        document.getElementById('admin-pending-products').textContent = stats.pendingProducts || 0;
+        document.getElementById('admin-total-orders').textContent = stats.totalOrders || 0;
+        document.getElementById('admin-total-revenue').textContent = (stats.totalRevenue || 0).toLocaleString();
+        
+        console.log('✅ Admin stats loaded');
+        
+    } catch (error) {
+        console.error('Error loading admin stats:', error);
+        document.getElementById('admin-overview').innerHTML = `
+            <div class="message error">
+                Error loading statistics. Please try again.
+            </div>
+        `;
+    }
 }
 
-function loadPendingProducts() {
+async function loadPendingProducts() {
     const tableBody = document.getElementById('pending-products-body');
     
     if (!tableBody) return;
     
-    // Mock data
-    const pendingProducts = [
-        { id: 1, name: 'Fresh Goat Milk', category: 'dairy', price: 120, farmer: 'Kamau Farm', date: '2023-10-15' },
-        { id: 2, name: 'Organic Eggs', category: 'poultry', price: 300, farmer: 'Njeri Poultry', date: '2023-10-16' },
-        { id: 3, name: 'Avocados', category: 'fruits', price: 50, farmer: 'Muthoni Farm', date: '2023-10-14' },
-        { id: 4, name: 'Sheep', category: 'livestock', price: 8000, farmer: 'Omondi Ranch', date: '2023-10-13' }
-    ];
-    
-    tableBody.innerHTML = '';
-    
-    pendingProducts.forEach(product => {
-        const row = document.createElement('tr');
+    try {
+        console.log('⏳ Loading pending products...');
+        tableBody.innerHTML = '<tr><td colspan="6" class="loading">Loading pending products...</td></tr>';
         
-        row.innerHTML = `
-            <td>${product.name}</td>
-            <td>${product.category}</td>
-            <td>KSh ${product.price}</td>
-            <td>${product.farmer}</td>
-            <td>${product.date}</td>
-            <td>
-                <div class="action-buttons">
-                    <button class="action-btn approve-btn" data-id="${product.id}">Approve</button>
-                    <button class="action-btn reject-btn" data-id="${product.id}">Reject</button>
-                </div>
-            </td>
+        const response = await adminAPI.getPendingProducts();
+        const products = response.products || [];
+        
+        tableBody.innerHTML = '';
+        
+        if (products.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <div class="empty-state">
+                            <div class="empty-icon">✅</div>
+                            <p>No pending products</p>
+                            <p class="text-light">All products have been reviewed.</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        console.log(`✅ Loaded ${products.length} pending products`);
+        
+        products.forEach(product => {
+            const row = document.createElement('tr');
+            const productDate = new Date(product.createdAt).toLocaleDateString('en-KE');
+            
+            row.innerHTML = `
+                <td>
+                    <div class="product-info-small">
+                        <strong>${product.name}</strong>
+                        <small>${product.description ? product.description.substring(0, 60) + '...' : 'No description'}</small>
+                    </div>
+                </td>
+                <td><span class="category-badge">${product.category}</span></td>
+                <td><strong>KSh ${product.price}</strong></td>
+                <td>
+                    <div class="farmer-info">
+                        <strong>${product.farmer?.farmName || product.farmer?.name}</strong>
+                        <small>${product.farmer?.email}</small>
+                    </div>
+                </td>
+                <td>${productDate}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn approve-btn" onclick="approveProduct('${product._id}')">
+                            Approve
+                        </button>
+                        <button class="action-btn reject-btn" onclick="rejectProduct('${product._id}')">
+                            Reject
+                        </button>
+                        <button class="action-btn" onclick="viewProductDetails('${product._id}')">
+                            View
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+    } catch (error) {
+        console.error('Error loading pending products:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center">
+                    <div class="message error">
+                        Error loading pending products. Please try again.
+                    </div>
+                </td>
+            </tr>
         `;
-        
-        tableBody.appendChild(row);
-    });
-    
-    // Add event listeners to action buttons
-    document.querySelectorAll('.approve-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const productId = this.getAttribute('data-id');
-            approveProduct(productId);
-        });
-    });
-    
-    document.querySelectorAll('.reject-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const productId = this.getAttribute('data-id');
-            rejectProduct(productId);
-        });
-    });
+    }
 }
 
-function loadAllProducts() {
+async function loadAllProducts() {
     const tableBody = document.getElementById('all-products-body');
     
     if (!tableBody) return;
     
-    // Mock data
-    const allProducts = [
-        { id: 1, name: 'Fresh Tomatoes', category: 'vegetables', price: 150, farmer: 'Mwangi Farm', status: 'approved', date: '2023-10-10' },
-        { id: 2, name: 'Organic Chicken', category: 'poultry', price: 800, farmer: 'Njeri Poultry', status: 'approved', date: '2023-10-11' },
-        { id: 3, name: 'Goat Meat', category: 'livestock', price: 1200, farmer: 'Kamau Farm', status: 'pending', date: '2023-10-15' },
-        { id: 4, name: 'Sukuma Wiki', category: 'vegetables', price: 50, farmer: 'Omondi Farm', status: 'approved', date: '2023-10-12' },
-        { id: 5, name: 'Mangoes', category: 'fruits', price: 80, farmer: 'Muthoni Farm', status: 'rejected', date: '2023-10-13' }
-    ];
-    
-    tableBody.innerHTML = '';
-    
-    allProducts.forEach(product => {
-        const row = document.createElement('tr');
+    try {
+        console.log('📦 Loading all products...');
+        tableBody.innerHTML = '<tr><td colspan="7" class="loading">Loading all products...</td></tr>';
         
-        let statusClass = '';
-        let statusText = '';
+        // For demo, we'll use featured products
+        const products = await productsAPI.getFeaturedProducts();
         
-        switch(product.status) {
-            case 'approved':
-                statusClass = 'status-approved';
-                statusText = 'Approved';
-                break;
-            case 'pending':
-                statusClass = 'status-pending';
-                statusText = 'Pending';
-                break;
-            case 'rejected':
-                statusClass = 'status-rejected';
-                statusText = 'Rejected';
-                break;
+        tableBody.innerHTML = '';
+        
+        if (products.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center">
+                        <div class="empty-state">
+                            <div class="empty-icon">📦</div>
+                            <p>No products found</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
         }
         
-        row.innerHTML = `
-            <td>${product.name}</td>
-            <td>${product.category}</td>
-            <td>KSh ${product.price}</td>
-            <td>${product.farmer}</td>
-            <td><span class="${statusClass}">${statusText}</span></td>
-            <td>${product.date}</td>
-            <td>
-                <div class="action-buttons">
-                    <button class="action-btn approve-btn" data-id="${product.id}">Approve</button>
-                    <button class="action-btn reject-btn" data-id="${product.id}">Reject</button>
-                    <button class="action-btn" data-id="${product.id}">Delete</button>
-                </div>
-            </td>
-        `;
+        console.log(`✅ Loaded ${products.length} products`);
         
-        tableBody.appendChild(row);
-    });
+        products.forEach(product => {
+            const row = document.createElement('tr');
+            const productDate = new Date(product.createdAt).toLocaleDateString('en-KE');
+            
+            let statusClass = '';
+            let statusText = '';
+            
+            switch(product.status) {
+                case 'approved':
+                    statusClass = 'status-approved';
+                    statusText = 'Approved';
+                    break;
+                case 'pending':
+                    statusClass = 'status-pending';
+                    statusText = 'Pending';
+                    break;
+                case 'rejected':
+                    statusClass = 'status-rejected';
+                    statusText = 'Rejected';
+                    break;
+            }
+            
+            row.innerHTML = `
+                <td>
+                    <div class="product-info-small">
+                        <strong>${product.name}</strong>
+                    </div>
+                </td>
+                <td><span class="category-badge">${product.category}</span></td>
+                <td><strong>KSh ${product.price}</strong></td>
+                <td>${product.farmer?.farmName || product.farmer?.name}</td>
+                <td><span class="${statusClass}">${statusText}</span></td>
+                <td>${productDate}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn approve-btn" onclick="approveProduct('${product._id}')">
+                            Approve
+                        </button>
+                        <button class="action-btn reject-btn" onclick="rejectProduct('${product._id}')">
+                            Reject
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+    } catch (error) {
+        console.error('Error loading all products:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center">
+                    <div class="message error">
+                        Error loading products. Please try again.
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
 }
 
-function loadUsers() {
+async function loadUsers() {
     const tableBody = document.getElementById('users-table-body');
     
     if (!tableBody) return;
     
-    // Mock data
-    const users = [
-        { id: 1, name: 'John Mwangi', email: 'john@example.com', type: 'farmer', location: 'Nakuru', joinDate: '2023-09-15' },
-        { id: 2, name: 'Jane Njeri', email: 'jane@example.com', type: 'buyer', location: 'Nairobi', joinDate: '2023-09-20' },
-        { id: 3, name: 'Peter Kamau', email: 'peter@example.com', type: 'farmer', location: 'Kiambu', joinDate: '2023-09-25' },
-        { id: 4, name: 'Mary Wanjiku', email: 'mary@example.com', type: 'buyer', location: 'Mombasa', joinDate: '2023-10-01' }
-    ];
-    
-    tableBody.innerHTML = '';
-    
-    users.forEach(user => {
-        const row = document.createElement('tr');
+    try {
+        console.log('👥 Loading users...');
+        tableBody.innerHTML = '<tr><td colspan="6" class="loading">Loading users...</td></tr>';
         
-        row.innerHTML = `
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td>${user.type}</td>
-            <td>${user.location}</td>
-            <td>${user.joinDate}</td>
-            <td>
-                <button class="action-btn">View</button>
-                <button class="action-btn reject-btn">Suspend</button>
-            </td>
+        // For demo, we'll create mock users
+        const mockUsers = [
+            {
+                _id: '1',
+                name: 'John Mwangi',
+                email: 'john@farmconnect.com',
+                userType: 'farmer',
+                location: { county: 'Nakuru', town: 'Naivasha' },
+                createdAt: new Date('2024-01-15')
+            },
+            {
+                _id: '2',
+                name: 'Jane Njeri',
+                email: 'jane@farmconnect.com',
+                userType: 'farmer',
+                location: { county: 'Kiambu', town: 'Thika' },
+                createdAt: new Date('2024-01-20')
+            },
+            {
+                _id: '3',
+                name: 'David Ochieng',
+                email: 'david@farmconnect.com',
+                userType: 'buyer',
+                location: { county: 'Nairobi', town: 'Westlands' },
+                createdAt: new Date('2024-02-01')
+            }
+        ];
+        
+        tableBody.innerHTML = '';
+        
+        mockUsers.forEach(user => {
+            const row = document.createElement('tr');
+            const joinDate = new Date(user.createdAt).toLocaleDateString('en-KE');
+            const location = user.location ? `${user.location.county}, ${user.location.town}` : 'N/A';
+            
+            row.innerHTML = `
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td>
+                    <span class="user-type-badge ${user.userType}">
+                        ${user.userType}
+                    </span>
+                </td>
+                <td>${location}</td>
+                <td>${joinDate}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="viewUser('${user._id}')">
+                            View
+                        </button>
+                        <button class="action-btn reject-btn" onclick="suspendUser('${user._id}')">
+                            Suspend
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        console.log('✅ Users loaded');
+        
+    } catch (error) {
+        console.error('Error loading users:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center">
+                    <div class="message error">
+                        Error loading users. Please try again.
+                    </div>
+                </td>
+            </tr>
         `;
-        
-        tableBody.appendChild(row);
-    });
+    }
 }
 
-function loadAdminOrders() {
+async function loadAdminOrders() {
     const tableBody = document.getElementById('admin-orders-body');
     
     if (!tableBody) return;
     
-    // Mock data
-    const orders = [
-        { id: 'FC-001', customer: 'Jane Njeri', amount: 1200, status: 'completed', payment: 'paid', date: '2023-10-15' },
-        { id: 'FC-002', customer: 'David Ochieng', amount: 800, status: 'pending', payment: 'pending', date: '2023-10-16' },
-        { id: 'FC-003', customer: 'Mary Wanjiku', amount: 2500, status: 'processing', payment: 'paid', date: '2023-10-14' },
-        { id: 'FC-004', customer: 'Paul Kimani', amount: 450, status: 'completed', payment: 'paid', date: '2023-10-13' }
-    ];
-    
-    tableBody.innerHTML = '';
-    
-    orders.forEach(order => {
-        const row = document.createElement('tr');
+    try {
+        console.log('📋 Loading all orders...');
+        tableBody.innerHTML = '<tr><td colspan="7" class="loading">Loading orders...</td></tr>';
         
-        row.innerHTML = `
-            <td>${order.id}</td>
-            <td>${order.customer}</td>
-            <td>KSh ${order.amount}</td>
-            <td>${order.status}</td>
-            <td>${order.payment}</td>
-            <td>${order.date}</td>
-            <td>
-                <button class="action-btn">View</button>
-                <button class="action-btn">Update</button>
-            </td>
+        // For demo, we'll create mock orders
+        const mockOrders = [
+            {
+                _id: 'ORD-001',
+                customerName: 'David Ochieng',
+                totalAmount: 1200,
+                status: 'completed',
+                paymentStatus: 'paid',
+                createdAt: new Date('2024-03-01')
+            },
+            {
+                _id: 'ORD-002',
+                customerName: 'Mary Wanjiku',
+                totalAmount: 800,
+                status: 'pending',
+                paymentStatus: 'pending',
+                createdAt: new Date('2024-03-02')
+            },
+            {
+                _id: 'ORD-003',
+                customerName: 'Paul Kimani',
+                totalAmount: 2500,
+                status: 'processing',
+                paymentStatus: 'paid',
+                createdAt: new Date('2024-03-01')
+            }
+        ];
+        
+        tableBody.innerHTML = '';
+        
+        mockOrders.forEach(order => {
+            const row = document.createElement('tr');
+            const orderDate = new Date(order.createdAt).toLocaleDateString('en-KE');
+            
+            row.innerHTML = `
+                <td><code>${order._id}</code></td>
+                <td>${order.customerName}</td>
+                <td><strong>KSh ${order.totalAmount}</strong></td>
+                <td><span class="status-${order.status}">${order.status}</span></td>
+                <td><span class="payment-${order.paymentStatus}">${order.paymentStatus}</span></td>
+                <td>${orderDate}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="viewOrder('${order._id}')">
+                            View
+                        </button>
+                        <button class="action-btn" onclick="updateOrder('${order._id}')">
+                            Update
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        console.log('✅ Orders loaded');
+        
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center">
+                    <div class="message error">
+                        Error loading orders. Please try again.
+                    </div>
+                </td>
+            </tr>
         `;
+    }
+}
+
+async function approveProduct(productId) {
+    if (!confirm('Are you sure you want to approve this product?')) {
+        return;
+    }
+    
+    try {
+        console.log('✅ Approving product:', productId);
         
-        tableBody.appendChild(row);
-    });
-}
-
-function approveProduct(productId) {
-    if (confirm('Are you sure you want to approve this product?')) {
-        // In real app, call API to approve product
-        console.log(`Approving product ${productId}`);
-        alert('Product approved successfully!');
-        loadPendingProducts(); // Refresh the list
-        loadAllProducts(); // Refresh all products list
-        loadAdminStats(); // Refresh stats
+        await adminAPI.updateProductStatus(productId, 'approved');
+        
+        showAdminMessage('Product approved successfully!', 'success');
+        
+        // Reload data
+        await Promise.all([
+            loadPendingProducts(),
+            loadAllProducts(),
+            loadAdminStats()
+        ]);
+        
+    } catch (error) {
+        console.error('Error approving product:', error);
+        showAdminMessage(error.message || 'Error approving product', 'error');
     }
 }
 
-function rejectProduct(productId) {
-    if (confirm('Are you sure you want to reject this product?')) {
-        // In real app, call API to reject product
-        console.log(`Rejecting product ${productId}`);
-        alert('Product rejected!');
-        loadPendingProducts(); // Refresh the list
-        loadAllProducts(); // Refresh all products list
-        loadAdminStats(); // Refresh stats
+async function rejectProduct(productId) {
+    if (!confirm('Are you sure you want to reject this product?')) {
+        return;
+    }
+    
+    try {
+        console.log('❌ Rejecting product:', productId);
+        
+        await adminAPI.updateProductStatus(productId, 'rejected');
+        
+        showAdminMessage('Product rejected successfully!', 'success');
+        
+        // Reload data
+        await Promise.all([
+            loadPendingProducts(),
+            loadAllProducts(),
+            loadAdminStats()
+        ]);
+        
+    } catch (error) {
+        console.error('Error rejecting product:', error);
+        showAdminMessage(error.message || 'Error rejecting product', 'error');
     }
 }
+
+function viewProductDetails(productId) {
+    console.log('👀 Viewing product details:', productId);
+    alert('Product details view coming soon!');
+}
+
+function viewUser(userId) {
+    console.log('👀 Viewing user details:', userId);
+    alert('User details view coming soon!');
+}
+
+function suspendUser(userId) {
+    if (confirm('Are you sure you want to suspend this user?')) {
+        console.log('⏸️ Suspending user:', userId);
+        alert('User suspension functionality coming soon!');
+    }
+}
+
+function viewOrder(orderId) {
+    console.log('👀 Viewing order details:', orderId);
+    alert('Order details view coming soon!');
+}
+
+function updateOrder(orderId) {
+    console.log('✏️ Updating order:', orderId);
+    alert('Order update functionality coming soon!');
+}
+
+function showAdminMessage(message, type = 'info') {
+    // Remove existing messages
+    const existingMessages = document.querySelectorAll('.admin-message');
+    existingMessages.forEach(msg => msg.remove());
+    
+    // Create new message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type} admin-message`;
+    messageDiv.textContent = message;
+    
+    // Add to current active section
+    const activeSection = document.querySelector('.admin-section.active');
+    if (activeSection) {
+        activeSection.insertBefore(messageDiv, activeSection.firstChild);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Add CSS for admin-specific styles
+const adminStyles = document.createElement('style');
+adminStyles.textContent = `
+    .farmer-info strong {
+        display: block;
+        margin-bottom: 2px;
+    }
+    
+    .farmer-info small {
+        color: var(--text-light);
+        font-size: 0.8rem;
+    }
+    
+    .user-type-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+    
+    .user-type-badge.farmer {
+        background: rgba(46, 125, 50, 0.1);
+        color: var(--primary-color);
+    }
+    
+    .user-type-badge.buyer {
+        background: rgba(255, 152, 0, 0.1);
+        color: var(--secondary-color);
+    }
+    
+    .user-type-badge.admin {
+        background: rgba(156, 39, 176, 0.1);
+        color: #9c27b0;
+    }
+    
+    .payment-paid {
+        color: var(--success-color);
+        font-weight: 600;
+        padding: 4px 8px;
+        background: rgba(67, 160, 71, 0.1);
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+    
+    .payment-pending {
+        color: var(--warning-color);
+        font-weight: 600;
+        padding: 4px 8px;
+        background: rgba(255, 179, 0, 0.1);
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+    
+    .admin-message {
+        margin-bottom: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .action-btn {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+    }
+`;
+document.head.appendChild(adminStyles);

@@ -11,8 +11,11 @@ router.get('/', async (req, res) => {
         
         let query = { status: 'approved' };
         
-        if (category && category !== 'all') query.category = category;
-        if (search) {
+        if (category && category !== 'all' && category !== '') {
+            query.category = category;
+        }
+        
+        if (search && search.trim() !== '') {
             query.name = { $regex: search, $options: 'i' };
         }
 
@@ -32,7 +35,7 @@ router.get('/', async (req, res) => {
         });
     } catch (error) {
         console.error('Get products error:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Error fetching products', error: error.message });
     }
 });
 
@@ -47,7 +50,7 @@ router.get('/featured', async (req, res) => {
         res.json(products);
     } catch (error) {
         console.error('Get featured products error:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Error fetching featured products', error: error.message });
     }
 });
 
@@ -69,7 +72,7 @@ router.post('/', auth, async (req, res) => {
             unit: unit || 'piece',
             farmer: req.user._id,
             location: req.user.location,
-            images: ['/images/default-product.jpg'] // Default image
+            images: ['/images/default-product.jpg'] // Local image
         });
 
         await product.populate('farmer', 'name farmName location');
@@ -77,7 +80,7 @@ router.post('/', auth, async (req, res) => {
         res.status(201).json(product);
     } catch (error) {
         console.error('Add product error:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Error adding product', error: error.message });
     }
 });
 
@@ -95,7 +98,7 @@ router.get('/my-products', auth, async (req, res) => {
         res.json(products);
     } catch (error) {
         console.error('Get my products error:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Error fetching your products', error: error.message });
     }
 });
 
@@ -112,7 +115,7 @@ router.get('/:id', async (req, res) => {
         res.json(product);
     } catch (error) {
         console.error('Get product error:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Error fetching product', error: error.message });
     }
 });
 

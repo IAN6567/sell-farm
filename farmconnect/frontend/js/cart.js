@@ -1,18 +1,22 @@
-// js/cart.js
-// Cart functionality
-
+// js/cart.js - COMPLETE & RESPONSIVE
 let cart = [];
 
 function initCart() {
+    console.log('🛒 Initializing cart...');
+    
     // Load cart from localStorage
     const savedCart = localStorage.getItem('farmconnect_cart');
     if (savedCart) {
-        cart = JSON.parse(savedCart);
+        try {
+            cart = JSON.parse(savedCart);
+            console.log(`✅ Loaded ${cart.length} items from cart`);
+        } catch (error) {
+            console.error('❌ Error loading cart from localStorage:', error);
+            cart = [];
+        }
     }
     
     updateCartUI();
-    
-    // Set up cart sidebar
     setupCartSidebar();
 }
 
@@ -25,27 +29,42 @@ function setupCartSidebar() {
         cartLink.addEventListener('click', function(e) {
             e.preventDefault();
             cartSidebar.classList.add('open');
+            console.log('🛒 Cart sidebar opened');
         });
     }
     
     if (closeSidebar) {
         closeSidebar.addEventListener('click', function() {
             cartSidebar.classList.remove('open');
+            console.log('❌ Cart sidebar closed');
         });
     }
+    
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(e) {
+        if (cartSidebar && cartSidebar.classList.contains('open')) {
+            if (!cartSidebar.contains(e.target) && e.target !== cartLink) {
+                cartSidebar.classList.remove('open');
+            }
+        }
+    });
 }
 
 function addToCart(product) {
+    console.log('➕ Adding to cart:', product.name);
+    
     // Check if product is already in cart
     const existingItem = cart.find(item => item.id === product.id);
     
     if (existingItem) {
         existingItem.quantity += 1;
+        console.log(`📦 Increased quantity to ${existingItem.quantity}`);
     } else {
         cart.push({
             ...product,
             quantity: 1
         });
+        console.log('🆕 New item added to cart');
     }
     
     // Save to localStorage
@@ -54,26 +73,53 @@ function addToCart(product) {
     // Update UI
     updateCartUI();
     
-    // Show confirmation
-    alert(`${product.name} added to cart!`);
+    // Show confirmation with animation
+    showCartNotification(`${product.name} added to cart!`);
+    
+    // Open cart sidebar on mobile
+    if (window.innerWidth <= 768) {
+        const cartSidebar = document.getElementById('cart-sidebar');
+        if (cartSidebar) {
+            cartSidebar.classList.add('open');
+        }
+    }
 }
 
 function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
+    console.log('🗑️ Removing item from cart:', productId);
     
-    // Save to localStorage
-    saveCart();
+    const itemIndex = cart.findIndex(item => item.id === productId);
+    if (itemIndex > -1) {
+        const removedItem = cart[itemIndex];
+        cart.splice(itemIndex, 1);
+        
+        // Save to localStorage
+        saveCart();
+        
+        // Update UI
+        updateCartUI();
+        
+        showCartNotification(`${removedItem.name} removed from cart`);
+    }
+}
+
+function updateCartQuantity(productId, newQuantity) {
+    if (newQuantity < 1) {
+        removeFromCart(productId);
+        return;
+    }
     
-    // Update UI
-    updateCartUI();
+    const item = cart.find(item => item.id === productId);
+    if (item) {
+        item.quantity = newQuantity;
+        saveCart();
+        updateCartUI();
+    }
 }
 
 function updateCartUI() {
-    // Update cart count
-    const cartCount = document.getElementById('cart-count');
-    if (cartCount) {
-        cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
-    }
+    // Update cart count in header
+    updateCartCount();
     
     // Update cart items in sidebar
     updateCartItems();
@@ -85,13 +131,35 @@ function updateCartUI() {
     updateCheckoutPage();
 }
 
+function updateCartCount() {
+    const cartCount = document.getElementById('cart-count');
+    if (cartCount) {
+        const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+        cartCount.textContent = totalItems;
+        
+        // Add animation for count change
+        if (totalItems > 0) {
+            cartCount.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                cartCount.style.transform = 'scale(1)';
+            }, 300);
+        }
+    }
+}
+
 function updateCartItems() {
     const cartItemsContainer = document.getElementById('cart-items');
     
     if (!cartItemsContainer) return;
     
     if (cart.length === 0) {
-        cartItemsContainer.innerHTML = '<p>Your cart is empty</p>';
+        cartItemsContainer.innerHTML = `
+            <div class="empty-cart">
+                <div class="empty-cart-icon">🛒</div>
+                <p>Your cart is empty</p>
+                <a href="products.html" class="btn btn-primary">Start Shopping</a>
+            </div>
+        `;
         return;
     }
     
@@ -101,12 +169,22 @@ function updateCartItems() {
         const cartItem = document.createElement('div');
         cartItem.className = 'cart-item';
         
+        // Use emoji or image for product
+        const itemDisplay = item.image && item.image.startsWith('/') 
+            ? `<img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.classList.add('fallback')">`
+            : `<div class="cart-item-image fallback">${item.image || '📦'}</div>`;
+        
         cartItem.innerHTML = `
-            <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='https://via.placeholder.com/80x80?text=Product'">
+            ${itemDisplay}
             <div class="cart-item-details">
                 <h4 class="cart-item-title">${item.name}</h4>
-                <p class="cart-item-price">KSh ${item.price} x ${item.quantity}</p>
-                <button class="cart-item-remove" data-id="${item.id}">Remove</button>
+                <p class="cart-item-price">KSh ${item.price} × ${item.quantity}</p>
+                <div class="cart-item-controls">
+                    <button class="quantity-btn" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})">−</button>
+                    <span class="quantity-display">${item.quantity}</span>
+                    <button class="quantity-btn" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">+</button>
+                    <button class="cart-item-remove" data-id="${item.id}">Remove</button>
+                </div>
             </div>
         `;
         
@@ -125,7 +203,7 @@ function updateCartTotal() {
     
     if (cartTotalAmount) {
         const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        cartTotalAmount.textContent = total;
+        cartTotalAmount.textContent = total.toLocaleString();
     }
 }
 
@@ -137,7 +215,13 @@ function updateCheckoutPage() {
         checkoutItems.innerHTML = '';
         
         if (cart.length === 0) {
-            checkoutItems.innerHTML = '<p>Your cart is empty</p>';
+            checkoutItems.innerHTML = `
+                <div class="empty-cart">
+                    <div class="empty-cart-icon">🛒</div>
+                    <p>Your cart is empty</p>
+                    <a href="products.html" class="btn btn-primary">Continue Shopping</a>
+                </div>
+            `;
             return;
         }
         
@@ -145,11 +229,16 @@ function updateCheckoutPage() {
             const checkoutItem = document.createElement('div');
             checkoutItem.className = 'cart-item';
             
+            const itemDisplay = item.image && item.image.startsWith('/') 
+                ? `<img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.classList.add('fallback')">`
+                : `<div class="cart-item-image fallback">${item.image || '📦'}</div>`;
+            
             checkoutItem.innerHTML = `
-                <img src="${item.image}" alt="${item.name}" class="cart-item-image" onerror="this.src='https://via.placeholder.com/80x80?text=Product'">
+                ${itemDisplay}
                 <div class="cart-item-details">
                     <h4 class="cart-item-title">${item.name}</h4>
-                    <p class="cart-item-price">KSh ${item.price} x ${item.quantity}</p>
+                    <p class="cart-item-price">KSh ${item.price} × ${item.quantity}</p>
+                    <p class="cart-item-subtotal">Subtotal: KSh ${(item.price * item.quantity).toLocaleString()}</p>
                 </div>
             `;
             
@@ -159,21 +248,149 @@ function updateCheckoutPage() {
     
     if (checkoutTotal) {
         const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        checkoutTotal.textContent = total;
+        checkoutTotal.textContent = total.toLocaleString();
     }
 }
 
 function saveCart() {
-    localStorage.setItem('farmconnect_cart', JSON.stringify(cart));
+    try {
+        localStorage.setItem('farmconnect_cart', JSON.stringify(cart));
+    } catch (error) {
+        console.error('❌ Error saving cart to localStorage:', error);
+    }
 }
 
 function clearCart() {
+    console.log('🗑️ Clearing entire cart');
     cart = [];
     saveCart();
     updateCartUI();
+    showCartNotification('Cart cleared');
 }
+
+function showCartNotification(message) {
+    // Remove existing notification
+    const existingNotification = document.querySelector('.cart-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    // Create new notification
+    const notification = document.createElement('div');
+    notification.className = 'cart-notification';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">✅</span>
+            <span class="notification-text">${message}</span>
+        </div>
+    `;
+    
+    // Add styles
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--success-color);
+        color: white;
+        padding: 12px 20px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow-lg);
+        z-index: 2000;
+        animation: slideInRight 0.3s ease;
+        max-width: 300px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Add CSS for animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    .empty-cart {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-cart-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .cart-item-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+    }
+    
+    .quantity-btn {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+    
+    .quantity-btn:hover {
+        background: #f5f5f5;
+        border-color: var(--primary-color);
+    }
+    
+    .quantity-display {
+        font-weight: 600;
+        min-width: 30px;
+        text-align: center;
+    }
+    
+    .cart-item-subtotal {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-top: 5px;
+    }
+`;
+document.head.appendChild(style);
 
 // Make functions available globally
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
+window.updateCartQuantity = updateCartQuantity;
 window.clearCart = clearCart;

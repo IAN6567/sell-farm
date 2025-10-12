@@ -8,6 +8,8 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
     try {
+        console.log('Registration attempt:', req.body);
+        
         const { name, email, password, userType, phone, location, farmName } = req.body;
 
         // Check if user exists
@@ -53,13 +55,15 @@ router.post('/register', async (req, res) => {
         });
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Server error during registration', error: error.message });
     }
 });
 
 // Login
 router.post('/login', async (req, res) => {
     try {
+        console.log('Login attempt:', { email: req.body.email, userType: req.body.userType });
+        
         const { email, password, userType } = req.body;
 
         // Find user
@@ -99,7 +103,7 @@ router.post('/login', async (req, res) => {
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Server error during login', error: error.message });
     }
 });
 

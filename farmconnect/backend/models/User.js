@@ -48,7 +48,7 @@ userSchema.pre('save', async function(next) {
     next();
 });
 
-// Compare password method - FIXED
+// Compare password method
 userSchema.methods.correctPassword = async function(candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
