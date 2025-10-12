@@ -1,4 +1,4 @@
-// js/api.js - UPDATED with real API calls
+// js/api.js - COMPLETELY FIXED
 const API_BASE_URL = 'http://localhost:5000/api';
 
 // Generic API call function
@@ -26,15 +26,21 @@ async function apiCall(endpoint, options = {}) {
     
     try {
         const response = await fetch(url, config);
-        const data = await response.json();
         
         if (!response.ok) {
-            throw new Error(data.message || 'API request failed');
+            const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
         
-        return data;
+        return await response.json();
+        
     } catch (error) {
         console.error('API call failed:', error);
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            throw new Error('Cannot connect to server. Please make sure the backend is running on http://localhost:5000');
+        }
+        
         throw error;
     }
 }
@@ -47,7 +53,6 @@ const authAPI = {
             body: JSON.stringify({ email, password, userType })
         });
         
-        // Store token and user data
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('userType', data.user.userType);
         localStorage.setItem('userData', JSON.stringify(data.user));
@@ -61,7 +66,6 @@ const authAPI = {
             body: JSON.stringify(userData)
         });
         
-        // Store token and user data
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('userType', data.user.userType);
         localStorage.setItem('userData', JSON.stringify(data.user));
@@ -93,28 +97,14 @@ const productsAPI = {
     },
     
     async addProduct(productData) {
-        const formData = new FormData();
-        
-        // Append all product data to formData
-        Object.keys(productData).forEach(key => {
-            if (productData[key] !== undefined && productData[key] !== null) {
-                formData.append(key, productData[key]);
-            }
-        });
-        
         return await apiCall('/products', {
             method: 'POST',
-            headers: {}, // Let browser set content-type for FormData
-            body: formData
+            body: JSON.stringify(productData)
         });
     },
     
     async getMyProducts() {
         return await apiCall('/products/my-products');
-    },
-    
-    async getProduct(id) {
-        return await apiCall(`/products/${id}`);
     }
 };
 
@@ -129,10 +119,6 @@ const ordersAPI = {
     
     async getMyOrders() {
         return await apiCall('/orders/my-orders');
-    },
-    
-    async getAllOrders() {
-        return await apiCall('/orders');
     }
 };
 
@@ -151,10 +137,6 @@ const adminAPI = {
     
     async getStats() {
         return await apiCall('/admin/stats');
-    },
-    
-    async getUsers() {
-        return await apiCall('/admin/users');
     }
 };
 
@@ -172,10 +154,6 @@ function getUserData() {
     return userData ? JSON.parse(userData) : null;
 }
 
-function getAuthToken() {
-    return localStorage.getItem('authToken');
-}
-
 // Make functions available globally
 window.authAPI = authAPI;
 window.productsAPI = productsAPI;
@@ -184,4 +162,3 @@ window.adminAPI = adminAPI;
 window.isLoggedIn = isLoggedIn;
 window.getUserType = getUserType;
 window.getUserData = getUserData;
-window.getAuthToken = getAuthToken;

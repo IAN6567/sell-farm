@@ -1,10 +1,8 @@
-// backend/seed.js - Run this to seed your database
 const mongoose = require('mongoose');
 require('dotenv').config();
 
 const User = require('./models/User');
 const Product = require('./models/Product');
-const Order = require('./models/Order');
 
 async function seedDatabase() {
     try {
@@ -14,14 +12,13 @@ async function seedDatabase() {
             useUnifiedTopology: true,
         });
 
-        console.log('Connected to MongoDB');
+        console.log('✅ Connected to MongoDB');
 
         // Clear existing data
         await User.deleteMany({});
         await Product.deleteMany({});
-        await Order.deleteMany({});
 
-        console.log('Cleared existing data');
+        console.log('🗑️ Cleared existing data');
 
         // Create admin user
         const adminUser = await User.create({
@@ -76,7 +73,7 @@ async function seedDatabase() {
                 unit: 'kg',
                 status: 'approved',
                 location: farmer1.location,
-                images: ['/uploads/tomatoes.jpg']
+                images: ['https://via.placeholder.com/300x200?text=Tomatoes']
             },
             {
                 name: 'Organic Chicken',
@@ -88,7 +85,7 @@ async function seedDatabase() {
                 unit: 'piece',
                 status: 'approved',
                 location: farmer2.location,
-                images: ['/uploads/chicken.jpg']
+                images: ['https://via.placeholder.com/300x200?text=Chicken']
             },
             {
                 name: 'Fresh Milk',
@@ -100,7 +97,7 @@ async function seedDatabase() {
                 unit: 'litre',
                 status: 'approved',
                 location: farmer1.location,
-                images: ['/uploads/milk.jpg']
+                images: ['https://via.placeholder.com/300x200?text=Milk']
             },
             {
                 name: 'Sukuma Wiki',
@@ -112,7 +109,7 @@ async function seedDatabase() {
                 unit: 'bunch',
                 status: 'approved',
                 location: farmer2.location,
-                images: ['/uploads/sukuma.jpg']
+                images: ['https://via.placeholder.com/300x200?text=Kale']
             },
             {
                 name: 'Goat Meat',
@@ -124,7 +121,7 @@ async function seedDatabase() {
                 unit: 'kg',
                 status: 'pending',
                 location: farmer1.location,
-                images: ['/uploads/goat.jpg']
+                images: ['https://via.placeholder.com/300x200?text=Goat+Meat']
             },
             {
                 name: 'Avocados',
@@ -136,50 +133,31 @@ async function seedDatabase() {
                 unit: 'piece',
                 status: 'approved',
                 location: farmer2.location,
-                images: ['/uploads/avocado.jpg']
-            },
-            {
-                name: 'Eggs',
-                description: 'Fresh farm eggs from free-range chickens.',
-                price: 300,
-                category: 'poultry',
-                farmer: farmer1._id,
-                quantity: 60,
-                unit: 'dozen',
-                status: 'approved',
-                location: farmer1.location,
-                images: ['/uploads/eggs.jpg']
-            },
-            {
-                name: 'Potatoes',
-                description: 'Fresh Irish potatoes, great for frying or boiling.',
-                price: 100,
-                category: 'vegetables',
-                farmer: farmer2._id,
-                quantity: 80,
-                unit: 'kg',
-                status: 'approved',
-                location: farmer2.location,
-                images: ['/uploads/potatoes.jpg']
+                images: ['https://via.placeholder.com/300x200?text=Avocados']
             }
         ];
 
         await Product.insertMany(products);
 
-        console.log('Created sample data:');
-        console.log('- Admin: admin@farmconnect.com / admin123');
-        console.log('- Farmer 1: john@farmconnect.com / farmer123');
-        console.log('- Farmer 2: jane@farmconnect.com / farmer123');
-        console.log('- Buyer: david@farmconnect.com / buyer123');
-        console.log('- 8 sample products (1 pending approval)');
+        console.log('📊 Created sample data:');
+        console.log('👨‍💼 Admin: admin@farmconnect.com / admin123');
+        console.log('👨‍🌾 Farmer 1: john@farmconnect.com / farmer123');
+        console.log('👩‍🌾 Farmer 2: jane@farmconnect.com / farmer123');
+        console.log('👤 Buyer: david@farmconnect.com / buyer123');
+        console.log('🥦 6 sample products (1 pending approval)');
+        console.log('✅ Database seeded successfully!');
 
-        console.log('Database seeded successfully!');
+        mongoose.connection.close();
         
-        process.exit(0);
     } catch (error) {
-        console.error('Seeding failed:', error);
+        console.error('❌ Seeding failed:', error);
         process.exit(1);
     }
 }
 
-seedDatabase();
+// Run if called directly
+if (require.main === module) {
+    seedDatabase();
+}
+
+module.exports = seedDatabase;

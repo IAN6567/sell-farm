@@ -1,24 +1,17 @@
-// js/main.js - UPDATED with real authentication
+// js/main.js - COMPLETELY FIXED
 document.addEventListener('DOMContentLoaded', function() {
     initApp();
 });
 
 async function initApp() {
-    // Set up event listeners
     setupEventListeners();
-    
-    // Check if user is already logged in
     await checkAuthStatus();
-    
-    // Load featured products
     await loadFeaturedProducts();
-    
-    // Initialize cart
     initCart();
 }
 
 function setupEventListeners() {
-    // Mobile menu toggle
+    // Mobile menu
     const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
     const nav = document.querySelector('.nav');
     
@@ -46,14 +39,13 @@ function setupEventListeners() {
         });
     }
     
-    // Close modal when clicking outside
     window.addEventListener('click', function(e) {
         if (e.target === loginModal) {
             loginModal.style.display = 'none';
         }
     });
     
-    // Login form submission
+    // Login form
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', function(e) {
@@ -84,7 +76,7 @@ function setupEventListeners() {
         });
     }
     
-    // Registration form submission
+    // Registration form
     if (registerForm) {
         registerForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -92,12 +84,14 @@ function setupEventListeners() {
         });
     }
     
-    // Logout functionality
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            authAPI.logout();
+    // Farm name field toggle
+    const userTypeSelect = document.getElementById('reg-user-type');
+    if (userTypeSelect) {
+        userTypeSelect.addEventListener('change', function() {
+            const farmNameGroup = document.getElementById('farm-name-group');
+            if (farmNameGroup) {
+                farmNameGroup.style.display = this.value === 'farmer' ? 'block' : 'none';
+            }
         });
     }
 }
@@ -106,10 +100,11 @@ async function checkAuthStatus() {
     if (isLoggedIn()) {
         try {
             const userData = getUserData();
-            updateUIForUser(userData.userType, userData.name);
+            if (userData) {
+                updateUIForUser(userData.userType, userData.name);
+            }
         } catch (error) {
-            console.error('Error checking auth status:', error);
-            authAPI.logout();
+            console.error('Auth check failed:', error);
         }
     }
 }
@@ -125,7 +120,7 @@ async function loadFeaturedProducts() {
         featuredProductsContainer.innerHTML = '';
         
         if (products.length === 0) {
-            featuredProductsContainer.innerHTML = '<p>No featured products available</p>';
+            featuredProductsContainer.innerHTML = '<p class="loading">No featured products available</p>';
             return;
         }
         
@@ -135,7 +130,7 @@ async function loadFeaturedProducts() {
         });
     } catch (error) {
         console.error('Error loading featured products:', error);
-        featuredProductsContainer.innerHTML = '<p>Error loading products. Please try again later.</p>';
+        featuredProductsContainer.innerHTML = '<p class="loading">Error loading products</p>';
     }
 }
 
@@ -147,17 +142,18 @@ function createProductCard(product) {
         ? product.images[0] 
         : 'https://via.placeholder.com/300x200?text=Product+Image';
     
+    const farmerName = product.farmer?.farmName || product.farmer?.name || 'Unknown Farmer';
+    
     card.innerHTML = `
-        <img src="${imageUrl}" alt="${product.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x200?text=Product+Image'">
+        <img src="${imageUrl}" alt="${product.name}" class="product-image">
         <div class="product-info">
             <h3 class="product-title">${product.name}</h3>
             <p class="product-price">KSh ${product.price}</p>
-            <p class="product-farmer">By ${product.farmer?.farmName || product.farmer?.name || 'Unknown Farmer'}</p>
+            <p class="product-farmer">By ${farmerName}</p>
             <button class="btn btn-primary add-to-cart" data-id="${product._id}">Add to Cart</button>
         </div>
     `;
     
-    // Add event listener to the add to cart button
     const addToCartBtn = card.querySelector('.add-to-cart');
     addToCartBtn.addEventListener('click', function() {
         addToCart({
@@ -165,7 +161,7 @@ function createProductCard(product) {
             name: product.name,
             price: product.price,
             image: imageUrl,
-            farmer: product.farmer?.farmName || product.farmer?.name
+            farmer: farmerName
         });
     });
     
@@ -184,30 +180,27 @@ async function handleLogin() {
     
     try {
         const loginBtn = document.querySelector('#login-form button[type="submit"]');
-        const originalText = loginBtn.textContent;
         loginBtn.textContent = 'Logging in...';
         loginBtn.disabled = true;
         
-        const result = await authAPI.login(email, password, userType);
+        await authAPI.login(email, password, userType);
         
-        // Close the modal
         document.getElementById('login-modal').style.display = 'none';
-        
-        // Update UI
-        updateUIForUser(result.user.userType, result.user.name);
-        
-        // Show success message
-        alert(`Welcome back, ${result.user.name}!`);
-        
-        // Reset form
         document.getElementById('login-form').reset();
         
+        const userData = getUserData();
+        updateUIForUser(userData.userType, userData.name);
+        
+        alert(`Welcome back, ${userData.name}!`);
+        
     } catch (error) {
-        alert(error.message || 'Login failed. Please try again.');
+        alert(error.message || 'Login failed. Please check your credentials.');
     } finally {
         const loginBtn = document.querySelector('#login-form button[type="submit"]');
-        loginBtn.textContent = 'Login';
-        loginBtn.disabled = false;
+        if (loginBtn) {
+            loginBtn.textContent = 'Login';
+            loginBtn.disabled = false;
+        }
     }
 }
 
@@ -232,7 +225,6 @@ async function handleRegistration() {
     
     try {
         const registerBtn = document.querySelector('#register-form button[type="submit"]');
-        const originalText = registerBtn.textContent;
         registerBtn.textContent = 'Registering...';
         registerBtn.disabled = true;
         
@@ -248,32 +240,27 @@ async function handleRegistration() {
         
         const result = await authAPI.register(userData);
         
-        // Close the modal
         document.getElementById('login-modal').style.display = 'none';
-        
-        // Update UI
-        updateUIForUser(result.user.userType, result.user.name);
-        
-        // Show success message
-        alert(`Registration successful! Welcome to FarmConnect, ${result.user.name}!`);
-        
-        // Reset form
         document.getElementById('register-form').reset();
+        
+        updateUIForUser(result.user.userType, result.user.name);
+        alert(`Welcome to FarmConnect, ${result.user.name}!`);
         
     } catch (error) {
         alert(error.message || 'Registration failed. Please try again.');
     } finally {
         const registerBtn = document.querySelector('#register-form button[type="submit"]');
-        registerBtn.textContent = 'Register';
-        registerBtn.disabled = false;
+        if (registerBtn) {
+            registerBtn.textContent = 'Register';
+            registerBtn.disabled = false;
+        }
     }
 }
 
 function updateUIForUser(userType, userName) {
     const loginLink = document.getElementById('login-link');
-    const nav = document.querySelector('.nav');
     
-    if (loginLink) {
+    if (loginLink && userName) {
         loginLink.innerHTML = `
             ${userName} ▼
             <ul class="dropdown-menu">
@@ -283,21 +270,26 @@ function updateUIForUser(userType, userName) {
             </ul>
         `;
         
-        // Add event listener to logout button
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                authAPI.logout();
-            });
-        }
-        
-        // Add dropdown functionality
         loginLink.classList.add('has-dropdown');
+        
+        // Add logout event listener
+        setTimeout(() => {
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    authAPI.logout();
+                });
+            }
+        }, 100);
+        
+        // Dropdown functionality
         loginLink.addEventListener('click', function(e) {
             e.preventDefault();
             const dropdown = this.querySelector('.dropdown-menu');
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            }
         });
         
         // Close dropdown when clicking outside
@@ -310,24 +302,4 @@ function updateUIForUser(userType, userName) {
             }
         });
     }
-    
-    // Show/hide admin link based on user type
-    const adminLink = document.querySelector('a[href="admin.html"]');
-    if (adminLink) {
-        adminLink.style.display = userType === 'admin' ? 'block' : 'none';
-    }
-    
-    // Show/hide dashboard link based on user type
-    const dashboardLink = document.querySelector('a[href="dashboard.html"]');
-    if (dashboardLink) {
-        dashboardLink.style.display = userType === 'farmer' ? 'block' : 'none';
-    }
-}
-
-// Utility function to format currency
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-KE', {
-        style: 'currency',
-        currency: 'KES'
-    }).format(amount);
 }
