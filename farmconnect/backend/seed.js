@@ -68,8 +68,7 @@ async function seedDatabase() {
     const products = [
       {
         name: "Fresh Tomatoes",
-        description:
-          "Freshly harvested tomatoes from our farm, perfect for cooking and salads.",
+        description: "Freshly harvested tomatoes from our farm, perfect for cooking and salads.",
         price: 150,
         category: "vegetables",
         farmer: farmer1._id,
@@ -77,20 +76,19 @@ async function seedDatabase() {
         unit: "kg",
         status: "approved",
         location: farmer1.location,
-        images: ["images/vegetables.jpg.jpg"], // Fixed path
+        images: ["http://localhost:5000/products/vegetables.jpg.jpg"], // ✅ Actual filename
       },
       {
         name: "Organic Chicken",
-        description:
-          "Free-range organic chicken, raised without antibiotics or hormones.",
+        description: "Free-range organic chicken, raised without antibiotics or hormones.",
         price: 800,
-        category: "poultry",
+        category: "poultry", 
         farmer: farmer2._id,
         quantity: 20,
         unit: "piece",
         status: "approved",
         location: farmer2.location,
-        images: ["/images/poultry.jpg.jpg"], // Fixed path
+        images: ["http://localhost:5000/products/poultry.jpg.jpg"], // ✅ Actual filename
       },
       {
         name: "Fresh Milk",
@@ -102,10 +100,10 @@ async function seedDatabase() {
         unit: "litre",
         status: "approved",
         location: farmer1.location,
-        images: ["/images/dairy.jpg.jpg"], // Fixed path
+        images: ["http://localhost:5000/products/dairy.jpg.jpg"], // ✅ Actual filename
       },
       {
-        name: "Sukuma Wiki",
+        name: "Sukuma Wiki", 
         description: "Fresh kale leaves, rich in vitamins and minerals.",
         price: 50,
         category: "vegetables",
@@ -114,19 +112,7 @@ async function seedDatabase() {
         unit: "bunch",
         status: "approved",
         location: farmer2.location,
-        images: ["/images/fruits.jpg.jpg"], // Fixed path
-      },
-      {
-        name: "Goat Meat",
-        description: "Fresh goat meat, perfect for traditional dishes.",
-        price: 1200,
-        category: "livestock",
-        farmer: farmer1._id,
-        quantity: 10,
-        unit: "kg",
-        status: "pending",
-        location: farmer1.location,
-        images: ["/images/livestock.jpg.jpg"], // Fixed path
+        images: ["http://localhost:5000/products/vegetables.jpg.jpg"], // Use vegetables for sukuma
       },
       {
         name: "Avocados",
@@ -138,8 +124,20 @@ async function seedDatabase() {
         unit: "piece",
         status: "approved",
         location: farmer2.location,
-        images: ["/images/fruits.jpg.jpg"], // Fixed path
+        images: ["http://localhost:5000/products/fruits.jpg.jpg"], // ✅ Actual filename
       },
+      {
+        name: "Goat Meat",
+        description: "Fresh goat meat, perfect for traditional dishes.",
+        price: 1200,
+        category: "livestock",
+        farmer: farmer1._id,
+        quantity: 10,
+        unit: "kg",
+        status: "pending",
+        location: farmer1.location,
+        images: ["http://localhost:5000/products/livestock.jpg.jpg"], // ✅ Actual filename
+      }
     ];
 
     await Product.insertMany(products);

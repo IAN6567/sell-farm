@@ -25,8 +25,15 @@ app.use(
 // Middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// ✅ FIXED: Serve frontend UI images from sellfarm/images
+app.use("/images", express.static(path.join(__dirname, "../sellfarm/images")));
+
+// ✅ ADDED: Serve backend product images from backend/images
+app.use("/products", express.static(path.join(__dirname, "images")));
+
+// Serve uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/images", express.static(path.join(__dirname, "../frontend/images")));
 
 // Test route
 app.get("/api/test", (req, res) => {
@@ -101,4 +108,6 @@ app.listen(PORT, () => {
   console.log(`📍 API URL: http://localhost:${PORT}/api`);
   console.log(`📍 Test URL: http://localhost:${PORT}/api/test`);
   console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`📍 Frontend images: http://localhost:${PORT}/images/`);
+  console.log(`📍 Product images: http://localhost:${PORT}/products/`);
 });
